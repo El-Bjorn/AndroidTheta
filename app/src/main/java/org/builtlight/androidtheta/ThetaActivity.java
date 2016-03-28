@@ -11,5 +11,6 @@ public class ThetaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_theta);
 
         ThetaSession thetaSession = new ThetaSession(this);
+        thetaSession.getCameraInfo();
     }
 }
