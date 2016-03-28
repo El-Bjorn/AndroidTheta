@@ -9,5 +9,7 @@ public class ThetaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_theta);
+
+        ThetaSession thetaSession = new ThetaSession(this);
     }
 }
