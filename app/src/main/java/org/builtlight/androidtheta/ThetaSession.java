@@ -6,6 +6,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -69,7 +72,20 @@ public class ThetaSession {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     if (response.isSuccessful()){
-                        Log.d(TAG, "got session: " + response.body().string());
+                        String jsonData = response.body().string();
+                        Log.d(TAG, "got session json: " + jsonData);
+                        try {
+                            JSONObject jsonResponse = new JSONObject(jsonData);
+                            JSONObject sessionIDjson = jsonResponse.getJSONObject("results");
+                            //Log.d(TAG,"Session ID json: "+sessionIDjson);
+                            mSessionId = sessionIDjson.getString("sessionId");
+                            Log.d(TAG, "extracted session id: "+ mSessionId);
+                            takePicture();
+
+                        } catch (JSONException e) {
+                            Log.e(TAG, "JSON exception: " + e);
+                            //e.printStackTrace();
+                        }
                     } else {
                         Log.d(TAG," BOOOOOO!!!!!" + response.body().string());
                     }
@@ -79,12 +95,33 @@ public class ThetaSession {
 
             }
         });
+    }
 
-        //Response response = mOurClient.newCall(request).execute();
+    public void takePicture() {
+        String takePictureURL = CAMERA_URL + "/commands/execute";
+        String takePicPostParam = "{ \"name\":\"camera.takePicture\","
+                + "\"parameters\": { \"sessionId\":\"" + mSessionId + "\"}}";
+        Log.d(TAG,"take pic param: "+ takePicPostParam);
+        RequestBody body = RequestBody.create(JSON,takePicPostParam);
+        Request request = new Request.Builder().url(takePictureURL).post(body).build();
+        Call call = mOurClient.newCall(request);
 
-        //System.out.println(response.body().string());
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
 
+            }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    Log.d(TAG,response.body().string());
+
+                } catch (IOException e){
+
+                }
+            }
+        });
     }
 
     public void getCameraInfo() {
