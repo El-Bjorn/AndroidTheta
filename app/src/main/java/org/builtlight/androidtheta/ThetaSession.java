@@ -30,11 +30,11 @@ public class ThetaSession {
     private static final String CAMERA_URL = "http://192.168.1.1/osc";
     private static final String INFO_REQ_PATH = "/info";
 
-    private boolean hasThetaSession;
+    public boolean hasThetaSession;
 
     private Context mContext;
     private OkHttpClient mOurClient;
-    private String mSessionId; // Theta session id
+    public String mSessionId; // Theta session id
 
     // constructor always requires a Context from the activity
     public ThetaSession(Context mContext){
@@ -45,14 +45,14 @@ public class ThetaSession {
 
         if (weHasNetwork()) {
             mOurClient = new OkHttpClient();
-            startThetaSession();
+            //startThetaSession();
 
 
             //
         }
     }
 
-    public void startThetaSession() {
+    public void startThetaSession(final Runnable completionHandler) {
         String startSessionURL = CAMERA_URL + "/commands/execute";
         Log.d(TAG,"URL: "+startSessionURL);
         String sessionStartPostParm = "{ \"name\": \"camera.startSession\", \"parameters\":[] }";
@@ -66,6 +66,7 @@ public class ThetaSession {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.d(TAG,"Session start failed: " + e);
+                completionHandler.run();
             }
 
             @Override
@@ -80,7 +81,8 @@ public class ThetaSession {
                             //Log.d(TAG,"Session ID json: "+sessionIDjson);
                             mSessionId = sessionIDjson.getString("sessionId");
                             Log.d(TAG, "extracted session id: "+ mSessionId);
-                            takePicture();
+                            hasThetaSession = true;
+                            //takePicture();
 
                         } catch (JSONException e) {
                             Log.e(TAG, "JSON exception: " + e);
@@ -91,7 +93,10 @@ public class ThetaSession {
                     }
                 } catch (IOException e){
                     Log.e(TAG,"IO Exception: "+ e);
+                } finally {
+                    completionHandler.run();
                 }
+
 
             }
         });
