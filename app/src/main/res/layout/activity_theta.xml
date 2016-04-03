@@ -12,5 +12,22 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:text="Android Simple HDR" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connect to Theta"
+        android:id="@+id/createSessionButton"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/connectProgressBar"
+        android:layout_below="@+id/createSessionButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="64dp" />
 </RelativeLayout>
