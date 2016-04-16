@@ -28,7 +28,12 @@ public class ThetaSession {
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     // network constants
     private static final String CAMERA_URL = "http://192.168.1.1/osc";
-    private static final String INFO_REQ_PATH = "/info";
+    // camera function request paths
+    private static final String INFO_REQ_PATH = "/info";   // the only GET (rest are POST)
+    private static final String EXEC_REQ_PATH = "/commands/execute";
+    private static final String STATUS_REQ_PATH = "/commands/status";
+    private static final String STATE_REQ_PATH = "/state";
+    private static final String UPDATES_REQ_PATH = "/checkForUpdates";
 
     public boolean hasThetaSession;
 
@@ -53,7 +58,7 @@ public class ThetaSession {
     }
 
     public void startThetaSession(final Runnable completionHandler) {
-        String startSessionURL = CAMERA_URL + "/commands/execute";
+        String startSessionURL = CAMERA_URL + EXEC_REQ_PATH; //"/commands/execute";
         Log.d(TAG,"URL: "+startSessionURL);
         String sessionStartPostParm = "{ \"name\": \"camera.startSession\", \"parameters\":[] }";
         Log.d(TAG,"request body: "+sessionStartPostParm);
@@ -102,8 +107,12 @@ public class ThetaSession {
         });
     }
 
-    public void takePicture() {
-        String takePictureURL = CAMERA_URL + "/commands/execute";
+    public void takePicture(final Runnable completionHandler) {
+        if (hasThetaSession == false){ // go home nothing to see here
+            Log.e(TAG, "Can't take a picture without a theta session");
+            return;
+        }
+        String takePictureURL = CAMERA_URL + EXEC_REQ_PATH; //"/commands/execute";
         String takePicPostParam = "{ \"name\":\"camera.takePicture\","
                 + "\"parameters\": { \"sessionId\":\"" + mSessionId + "\"}}";
         Log.d(TAG,"take pic param: "+ takePicPostParam);
@@ -123,6 +132,8 @@ public class ThetaSession {
                     Log.d(TAG,response.body().string());
 
                 } catch (IOException e){
+
+                } finally {
 
                 }
             }

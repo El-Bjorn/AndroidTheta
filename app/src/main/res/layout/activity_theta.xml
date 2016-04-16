@@ -12,22 +12,37 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Android Simple HDR" />
+        android:text="Android Simple HDR"
+        android:id="@+id/textView" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Connect to Theta"
         android:id="@+id/createSessionButton"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="103dp" />
 
     <ProgressBar
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/connectProgressBar"
-        android:layout_below="@+id/createSessionButton"
+        android:layout_below="@+id/takePictureButton"
+        android:layout_above="@+id/createSessionButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="64dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TAKE PICTURE"
+        android:id="@+id/takePictureButton"
+        android:layout_below="@+id/textView"
+        android:layout_alignRight="@+id/createSessionButton"
+        android:layout_alignEnd="@+id/createSessionButton"
+        android:layout_marginTop="117dp"
+        android:layout_alignLeft="@+id/createSessionButton"
+        android:layout_alignStart="@+id/createSessionButton" />
 </RelativeLayout>
