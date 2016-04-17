@@ -3,17 +3,12 @@ package org.builtlight.androidtheta;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.content.Context;
-import android.net.Uri;
 import android.util.Log;
-import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -53,10 +48,8 @@ public class ThetaSession {
         hasThetaSession = false; // assume no
         mSessionId = "";
         mOurClient = null;
-
-        //if (weHasNetwork()) {
-            mOurClient = new OkHttpClient();
-        //}
+        // make our OkHttpClient for this session
+        mOurClient = new OkHttpClient();
     }
 
     public void startThetaSession(final Runnable completionHandler) {
@@ -128,9 +121,7 @@ public class ThetaSession {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
             }
-
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 Log.d(TAG,"takePicture() response block");
@@ -144,16 +135,14 @@ public class ThetaSession {
                             JSONObject jsonResponse = new JSONObject(jsonData);
                             final String commId = jsonResponse.getString("id");
                             Log.d(TAG, "got command id: " + commId);
-                            waitForCommand(commId, completionHandler);
+                            waitForPicture(commId, completionHandler);
 
                         } catch (JSONException je) {
                             Log.d(TAG,"json exception: "+je);
                         }
                     }
-
                 } catch (IOException e){
 
-                } finally {
                 }
             }
         });
@@ -189,9 +178,10 @@ public class ThetaSession {
         }
     }
 
-    public void waitForCommand(final String commId, final TakePicCompBloc completionHandler) {
+    public void waitForPicture(final String commId, final TakePicCompBloc completionHandler) {
+        // avoid being annoying about checking for the picture
         try {
-            Thread.sleep(5000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -211,7 +201,7 @@ public class ThetaSession {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                //Log.d(TAG,"waitForCommand() response block");
+                //Log.d(TAG,"waitForPicture() response block");
                 String jsonData = response.body().string();
                 Log.d(TAG,"json response in wait: "+jsonData);
                 if (response.isSuccessful()) {
@@ -221,13 +211,14 @@ public class ThetaSession {
                         String commState = jsonResponse.getString("state");
                         Log.d(TAG, "commState= " + commState);
                         if (commState.equals("done")) {
-                            Log.d(TAG, "Yippie picture done");
-                            completionHandler.imgURI = "fishlips";
+                            JSONObject picURIjson = jsonResponse.getJSONObject("results");
+                            String picURI = picURIjson.getString("fileUri");
+                            Log.d(TAG, "Yippie picture done. URI: "+ picURI);
+                            completionHandler.imgURI = picURI;
                             completionHandler.run();
                         } else {
                             Log.d(TAG, "wait some more....");
-                            waitForCommand(commId, completionHandler);
-                            //waitForCommand(commId,completionHandler);
+                            waitForPicture(commId, completionHandler);
                         }
 
                     } catch (JSONException je) {
