@@ -35,7 +35,7 @@ public class ThetaSession {
     private static final String UPDATES_REQ_PATH = "/checkForUpdates";
 
     public boolean hasThetaSession;
-    public boolean isPictureReady;
+    //public boolean isPictureReady;
 
     private Context mContext;
     private OkHttpClient mOurClient;
@@ -107,7 +107,6 @@ public class ThetaSession {
             Log.e(TAG, "Can't take a picture without a theta session");
             return;
         }
-        isPictureReady = false;
 
         String takePictureURL = CAMERA_URL + EXEC_REQ_PATH; //"/commands/execute";
         String takePicPostParam = "{ \"name\":\"camera.takePicture\","
@@ -215,6 +214,7 @@ public class ThetaSession {
                             String picURI = picURIjson.getString("fileUri");
                             Log.d(TAG, "Yippie picture done. URI: "+ picURI);
                             completionHandler.imgURI = picURI;
+                            completionHandler.pictureDidComplete = true;
                             completionHandler.run();
                         } else {
                             Log.d(TAG, "wait some more....");
@@ -230,6 +230,23 @@ public class ThetaSession {
                 }
             }
         });
+    }
+
+    public void downloadPictureWithUri(final String fileUri, final DownloadPicCompBloc completionHandler) {
+        if (hasThetaSession == false){
+            Log.e(TAG,"Can't download picture without a theta session");
+            return;
+        }
+        String downPictureURL = CAMERA_URL + EXEC_REQ_PATH;
+        String downloadPicPostParam = "{ \"name\":\"camera.getImage\","
+                + "\"parameters\": { \"fileUri\":" + fileUri +","
+                + "\"_type\":\"full\" }}";
+        Log.d(TAG,"download param: "+ downloadPicPostParam);
+
+        // testing
+        completionHandler.picDidDownload = true;
+        completionHandler.run();
+
     }
 
 

@@ -37,7 +37,7 @@ public class ThetaActivity extends AppCompatActivity {
         View.OnClickListener takePictureListener = new View.OnClickListener() {
             @Override
             public void onClick(View v){
-                Log.d(TAG,"Attempting to Take a picture");
+                Log.d(TAG, "Attempting to Take a picture");
                 connectProgress.setVisibility(View.VISIBLE); // show spinner
 
                 thetaSession.takePicture(new TakePicCompBloc() {
@@ -49,12 +49,23 @@ public class ThetaActivity extends AppCompatActivity {
                             public void run() {
                                 // dismiss spinner
                                 connectProgress.setVisibility(View.INVISIBLE);
-                                Log.d(TAG,"img uri is ....: "+imgURI);
+
+                                if (pictureDidComplete) {
+                                    Log.d(TAG, "taking picture complete img uri is ....: " + imgURI);
+                                    thetaSession.downloadPictureWithUri(imgURI, new
+                                            DownloadPicCompBloc() {
+                                                @Override
+                                                public void run() {
+                                                    //Log.d(TAG, "download ");
+                                                    if (picDidDownload) {
+                                                        Log.d(TAG,"Download complete");
+                                                    }
+                                                }
+                                            });
+
+                                }
                             }
                         });
-
-
-
                     }
                 });
             }
