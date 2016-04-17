@@ -45,4 +45,10 @@
         android:layout_marginTop="117dp"
         android:layout_alignLeft="@+id/createSessionButton"
         android:layout_alignStart="@+id/createSessionButton" />
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/thumbView"
+        android:layout_below="@id/textView" />
 </RelativeLayout>

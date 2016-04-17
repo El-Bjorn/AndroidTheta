@@ -1,10 +1,13 @@
 package org.builtlight.androidtheta;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 //import android.content.Context;
 
@@ -17,6 +20,7 @@ public class ThetaActivity extends AppCompatActivity {
     @InjectView(R.id.createSessionButton) Button createSessButton;
     @InjectView(R.id.connectProgressBar) ProgressBar connectProgress; // spinner
     @InjectView(R.id.takePictureButton) Button takePicButton;
+    @InjectView(R.id.thumbView) ImageView thumbImageView;
 
 
     @Override
@@ -58,7 +62,17 @@ public class ThetaActivity extends AppCompatActivity {
                                                 public void run() {
                                                     //Log.d(TAG, "download ");
                                                     if (picDidDownload) {
-                                                        Log.d(TAG,"Download complete");
+                                                        Log.d(TAG, "Download complete");
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                thumbImageView.setImageBitmap(imgData);
+                                                            }
+                                                        });
+
+                                                        //Log.d(TAG,"got: "+ imgData.substring(0,20));
+                                                        //Bitmap bmp = BitmapFactory.decodeByteArray(imgData,0,imgData.length());
+                                                        //Bitmap bmp = BitmapFactory.decode
                                                     }
                                                 }
                                             });

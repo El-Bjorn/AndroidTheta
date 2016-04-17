@@ -1,7 +1,9 @@
 package org.builtlight.androidtheta;
 
+import android.graphics.Bitmap;
+
 public abstract class DownloadPicCompBloc implements Runnable {
-    String imgData = null;
+    Bitmap imgData = null;
     Boolean picDidDownload = false;
 
     @Override

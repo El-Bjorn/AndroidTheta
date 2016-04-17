@@ -1,5 +1,6 @@
 package org.builtlight.androidtheta;
 
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.content.Context;
@@ -8,7 +9,10 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -233,21 +237,53 @@ public class ThetaSession {
     }
 
     public void downloadPictureWithUri(final String fileUri, final DownloadPicCompBloc completionHandler) {
-        if (hasThetaSession == false){
+        if (hasThetaSession==false){
             Log.e(TAG,"Can't download picture without a theta session");
             return;
         }
         String downPictureURL = CAMERA_URL + EXEC_REQ_PATH;
         String downloadPicPostParam = "{ \"name\":\"camera.getImage\","
-                + "\"parameters\": { \"fileUri\":" + fileUri +","
-                + "\"_type\":\"full\" }}";
+                + "\"parameters\": { \"fileUri\": \"" + fileUri +"\","
+                + "\"_type\":\"thumb\" }}";
         Log.d(TAG,"download param: "+ downloadPicPostParam);
+        RequestBody body = RequestBody.create(JSON,downloadPicPostParam);
+        Request request = new Request.Builder().url(downPictureURL).post(body).build();
+        Call call = mOurClient.newCall(request);
+
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG,"download failed");
+                completionHandler.run();
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Log.d(TAG, "download pic response block");
+                if (response.isSuccessful()) {
+                    InputStream in = response.body().byteStream();
+                    /*BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    String line = reader.readLine();
+                    String result = line;
+                    while ((line = reader.readLine()) != null) {
+                        result += line;
+                    } */
+                    completionHandler.imgData = BitmapFactory.decodeStream(in);
+                    completionHandler.picDidDownload = true;
+                    completionHandler.run();
+                } else {
+                    Log.d(TAG, "Bad pic download reponse: " + response.body().string());
+                    completionHandler.run();
+                }
+
+            }
+
+        });
+    }
 
         // testing
-        completionHandler.picDidDownload = true;
-        completionHandler.run();
 
-    }
 
 
     // Test for minimal connectivity
