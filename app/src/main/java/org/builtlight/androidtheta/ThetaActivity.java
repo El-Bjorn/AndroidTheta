@@ -40,7 +40,8 @@ public class ThetaActivity extends AppCompatActivity {
                 Log.d(TAG,"Attempting to Take a picture");
                 connectProgress.setVisibility(View.VISIBLE); // show spinner
 
-                thetaSession.takePicture(new Runnable() {
+                thetaSession.takePicture(new TakePicCompBloc() {
+
                     @Override
                     public void run() {
                         runOnUiThread(new Runnable() {
@@ -48,6 +49,7 @@ public class ThetaActivity extends AppCompatActivity {
                             public void run() {
                                 // dismiss spinner
                                 connectProgress.setVisibility(View.INVISIBLE);
+                                Log.d(TAG,"img uri is ....: "+imgURI);
                             }
                         });
 
@@ -75,13 +77,13 @@ public class ThetaActivity extends AppCompatActivity {
                             //thetaSession.takePicture(null);
 
                         } else {
-                            Log.d(TAG,"no theta session id for you");
+                            Log.d(TAG, "no theta session id for you");
                             //System.out.printf("no theta sessions");
                         }
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (thetaSession.hasThetaSession){
+                                if (thetaSession.hasThetaSession) {
                                     takePicButton.setEnabled(true); // enable picture taking
                                 }
                                 // dismiss spinner

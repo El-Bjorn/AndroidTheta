@@ -5,11 +5,15 @@ import android.net.NetworkInfo;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -36,10 +40,12 @@ public class ThetaSession {
     private static final String UPDATES_REQ_PATH = "/checkForUpdates";
 
     public boolean hasThetaSession;
+    public boolean isPictureReady;
 
     private Context mContext;
     private OkHttpClient mOurClient;
     public String mSessionId; // Theta session id
+
 
     // constructor always requires a Context from the activity
     public ThetaSession(Context mContext){
@@ -48,13 +54,9 @@ public class ThetaSession {
         mSessionId = "";
         mOurClient = null;
 
-        if (weHasNetwork()) {
+        //if (weHasNetwork()) {
             mOurClient = new OkHttpClient();
-            //startThetaSession();
-
-
-            //
-        }
+        //}
     }
 
     public void startThetaSession(final Runnable completionHandler) {
@@ -62,7 +64,7 @@ public class ThetaSession {
         Log.d(TAG,"URL: "+startSessionURL);
         String sessionStartPostParm = "{ \"name\": \"camera.startSession\", \"parameters\":[] }";
         Log.d(TAG,"request body: "+sessionStartPostParm);
-        RequestBody body = RequestBody.create(JSON,sessionStartPostParm);
+        RequestBody body = RequestBody.create(JSON, sessionStartPostParm);
 
         Request request = new Request.Builder().url(startSessionURL).post(body).build();
         Call call = mOurClient.newCall(request);
@@ -107,17 +109,20 @@ public class ThetaSession {
         });
     }
 
-    public void takePicture(final Runnable completionHandler) {
+    public void takePicture(final TakePicCompBloc completionHandler) {
         if (hasThetaSession == false){ // go home nothing to see here
             Log.e(TAG, "Can't take a picture without a theta session");
             return;
         }
+        isPictureReady = false;
+
         String takePictureURL = CAMERA_URL + EXEC_REQ_PATH; //"/commands/execute";
         String takePicPostParam = "{ \"name\":\"camera.takePicture\","
                 + "\"parameters\": { \"sessionId\":\"" + mSessionId + "\"}}";
         Log.d(TAG,"take pic param: "+ takePicPostParam);
-        RequestBody body = RequestBody.create(JSON,takePicPostParam);
+        RequestBody body = RequestBody.create(JSON, takePicPostParam);
         Request request = new Request.Builder().url(takePictureURL).post(body).build();
+        //OkHttpClient tmpClient = new OkHttpClient();
         Call call = mOurClient.newCall(request);
 
         call.enqueue(new Callback() {
@@ -128,13 +133,27 @@ public class ThetaSession {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                Log.d(TAG,"takePicture() response block");
                 try {
-                    Log.d(TAG,response.body().string());
+                    //Log.d(TAG,response.body().string());
+                    // get command id so we can wait for it
+                    if (response.isSuccessful()){
+                        String jsonData = response.body().string();
+                        Log.d(TAG,"got json resp data: "+ jsonData);
+                        try {
+                            JSONObject jsonResponse = new JSONObject(jsonData);
+                            final String commId = jsonResponse.getString("id");
+                            Log.d(TAG, "got command id: " + commId);
+                            waitForCommand(commId, completionHandler);
+
+                        } catch (JSONException je) {
+                            Log.d(TAG,"json exception: "+je);
+                        }
+                    }
 
                 } catch (IOException e){
 
                 } finally {
-
                 }
             }
         });
@@ -150,19 +169,19 @@ public class ThetaSession {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.d(TAG,"Network info call failure:" + e);
+                    Log.d(TAG, "Network info call failure:" + e);
                 }
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     try {
-                        if (response.isSuccessful()){
-                            Log.d(TAG,"Talking to the camera: " + response.body().string());
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Talking to the camera: " + response.body().string());
 
                         } else {
-                            Log.d(TAG,"We can a bad response: " + response.body().string());
+                            Log.d(TAG, "We can a bad response: " + response.body().string());
                         }
-                    } catch (IOException e){
+                    } catch (IOException e) {
                         Log.e(TAG, "IO Exception caught: ", e);
                     }
                 }
@@ -170,8 +189,58 @@ public class ThetaSession {
         }
     }
 
+    public void waitForCommand(final String commId, final TakePicCompBloc completionHandler) {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String checkStatusURL = CAMERA_URL + STATUS_REQ_PATH;
+        String commandIdPostParam = "{ \"id\":\"" + commId + "\" }";
+        Log.d(TAG,"wait post param: "+commandIdPostParam);
+        RequestBody body = RequestBody.create(JSON, commandIdPostParam);
+        Request request = new Request.Builder().url(checkStatusURL).post(body).build();
+        //OkHttpClient tmpClient = new OkHttpClient();
+        Call call = mOurClient.newCall(request);
+        Log.d(TAG,"created call");
 
-    //private void getComeraInfo
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //Log.d(TAG,"waitForCommand() response block");
+                String jsonData = response.body().string();
+                Log.d(TAG,"json response in wait: "+jsonData);
+                if (response.isSuccessful()) {
+
+                    try {
+                        JSONObject jsonResponse = new JSONObject(jsonData);
+                        String commState = jsonResponse.getString("state");
+                        Log.d(TAG, "commState= " + commState);
+                        if (commState.equals("done")) {
+                            Log.d(TAG, "Yippie picture done");
+                            completionHandler.imgURI = "fishlips";
+                            completionHandler.run();
+                        } else {
+                            Log.d(TAG, "wait some more....");
+                            waitForCommand(commId, completionHandler);
+                            //waitForCommand(commId,completionHandler);
+                        }
+
+                    } catch (JSONException je) {
+                        Log.d(TAG, "Got JSON exception" + je);
+                        completionHandler.imgURI = "Error";
+                        completionHandler.run();
+
+                    }
+                }
+            }
+        });
+    }
+
 
     // Test for minimal connectivity
     private boolean weHasNetwork() {
